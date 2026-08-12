@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "quarch-eval"
+version = "0.1.0"
+description = "A package to evaluate LLMs on computer architecture questions."
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "litellm",
+    "pyyaml",
+    "python-dotenv",
+    "cryptography",
+    "loguru",
+    "Pillow",
+    "fire",
+    "huggingface_hub",
+    "datasets",
+    "jsonlines",
+    "tqdm",
+    "pydantic",
+    "boto3",
+    "google-generativeai",
+    "openai",
+    "openai-harmony",
+    "ml-collections",
+    "pandas",
+]
+
+[tool.setuptools]
+packages = ["quarch_eval"]
+
+[project.scripts]
+quarch-eval = "quarch_eval.cli:main"

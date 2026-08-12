@@ -1,0 +1,6 @@
+.env
+quarchds/
+build/
+output/
+__pycache__/
+quarch_eval.egg-info/

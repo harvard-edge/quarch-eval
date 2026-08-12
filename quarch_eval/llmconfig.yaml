@@ -1,0 +1,84 @@
+## Template:
+# "<llm-id-name>":
+#   litellm_name: "<litellm/llm/path>"
+#   [api_base: "https://url.of.api.base/v1"]
+#   [api_key_env_var: "NAME-OF-API-KEY-ENV-VARIABLE"]
+#   [max_input_images: .inf|image-count]
+#   [image_max_dim: null|pixel-count]
+#   [response_parser: "default|parser-name"]
+#   [use_responses_api: true|false]
+#   [generation_kwargs: dictionary-of-kwargs]
+#   [provider_is_safe_for_llm_as_a_judge: true|false]
+
+"claude-sonnet-4":
+  litellm_name: "bedrock/global.anthropic.claude-sonnet-4-20250514-v1:0"
+  generation_kwargs:
+    max_tokens: 10000
+    reasoning_config: 
+      type: "enabled"
+      budget_tokens: 5000
+
+"deepseek-r1":
+  litellm_name: "bedrock/us.deepseek.r1-v1:0"
+  max_input_images: 0
+  generation_kwargs:
+    max_tokens: 32768
+
+"llama4-maverick":
+  litellm_name: "bedrock/us.meta.llama4-maverick-17b-instruct-v1:0"
+  max_input_images: 3
+
+"llama3-3-70b":
+  litellm_name: "bedrock/us.meta.llama3-3-70b-instruct-v1:0"
+  max_input_images: 0
+
+"llama3-2-11b":
+  litellm_name: "bedrock/us.meta.llama3-2-11b-instruct-v1:0"
+  max_input_images: 1
+  image_max_dim: 1120
+
+# this is a nonthinking qwen VL model
+# AWS Bedrock guarantees no models will be trained on prompts
+# only trusted model APIs which guarantee no training on prompts (such as AWS Bedrock) 
+# can be used for llm-as-a-judge, as judge models are provided groundtruth QuArch answers in their prompts
+# https://docs.aws.amazon.com/bedrock/latest/userguide/data-protection.html
+"qwen3-vl-235b-a22b":
+  litellm_name: "bedrock/qwen.qwen3-vl-235b-a22b"
+  provider_is_safe_for_llm_as_a_judge: true
+  generation_kwargs:
+    max_tokens: 200000
+
+"gpt5-2-thinking":
+  litellm_name: "openai/gpt-5.2-2025-12-11"
+  response_parser: "litellm_responses_api"
+  use_responses_api: true
+  generation_kwargs:
+    reasoning:
+      effort: "medium"
+
+"gemini-3-pro-preview":
+  litellm_name: "gemini/gemini-3-pro-preview"
+  generation_kwargs:
+    max_tokens: 1048576
+
+"gemini-3-flash-preview":
+  litellm_name: "gemini/gemini-3-flash-preview"
+  generation_kwargs:
+    max_tokens: 1048576
+
+"gemini-2-5-pro":
+  litellm_name: "gemini/gemini-2.5-pro"
+  generation_kwargs:
+    max_tokens: 1048576
+
+"gpt-oss-120b":
+  litellm_name: "openrouter/openai/gpt-oss-120b"
+  max_input_images: 0
+  generation_kwargs:
+    use_harmony_adapter: true
+
+"gemma-3-27b-it":
+  litellm_name: "openrouter/google/gemma-3-27b-it"
+
+"mistral-medium-3-1":
+  litellm_name: "openrouter/mistralai/mistral-medium-3.1"
