@@ -1,3 +1,23 @@
+# QuArch: A Benchmark for Evaluating LLM Reasoning in Computer Architecture (ICML 2026)
+
+* Website: https://quarch.ai
+* ICML 2026 talk: https://icml.cc/virtual/2026/poster/60614 (OpenReview: https://openreview.net/forum?id=yU6X1XZl8t)
+* ArXiv: https://arxiv.org/abs/2510.22087
+
+To cite our work:
+
+```
+@inproceedings{prakash2026quarch,
+  title={QuArch: A Benchmark for Evaluating LLM Reasoning in Computer Architecture},
+  author={Prakash, Shvetank and Cheng, Andrew and Tschand, Arya and Mazumder, Mark and Gohil, Varun and Ma, Jeffrey and Yik, Jason and Wan, Zishen and Quaye, Jessica and Alvanaki, Elisavet Lydia and Kumar, Avinash and Mazumdar, Chandrashis and Khare, Tuhin and Ingare, Alexander and Uchendu, Ikechukwu and Ghosal, Radhika and Tyagi, Abhishek and Wang, Chenyu and Garavagno, Andrea Mattia and Gu, Sarah and Guo, Alice and Hur, Grace and Carloni, Luca and Krishna, Tushar and Nayak, Ankita and Yazdanbakhsh, Amir and Reddi, Vijay Janapa},
+  booktitle={Forty-third International Conference on Machine Learning (ICML)},
+  year={2026},
+  url={https://openreview.net/forum?id=yU6X1XZl8t}
+}
+```
+
+This repository contains the **evaluation harness** for QuArch. In order to access the benchmark questions and answers, please follow the instructions on https://quarch.ai
+
 ## Installation
 
 ### Prerequisites
