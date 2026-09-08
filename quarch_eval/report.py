@@ -100,8 +100,11 @@ def discover_models(output_path: Path, llms: list[str] | str | None) -> list[str
         frq_dir = output_path / 'llm-judge-responses'
         if frq_dir.exists():
             for p in frq_dir.glob('*_llm_judge_responses.json'):
-                stem = p.name[: -len('_llm_judge_responses.json')]
-                models.add(stem.split('_')[-1])
+                try:
+                    with open(p, 'r', encoding='utf-8') as f:
+                        models.add(json.load(f)['student_llm_name'])
+                except Exception as e:
+                    logger.error(f"Error reading student_llm_name from {p}: {e}")
         return sorted(models)
 
     return [llms]
