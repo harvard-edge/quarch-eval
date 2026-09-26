@@ -193,6 +193,7 @@ def main():
     parser.add_argument("--num_workers", type=int, default=4, help="Number of parallel worker threads.")
     parser.add_argument("--llm_config", type=str, default="", help="Path to llm config.")
     parser.add_argument("--env_file", type=str, default=None, help="Path to a .env file to load environment variables from.")
+    parser.add_argument("--quarchds_mcqs_dir", type=str, default=None, help="Path to QuArch mcqs subdirectory (e.g., quarchds/mcqs). If unset, downloads from HuggingFace.")
 
     args = parser.parse_args()
 
@@ -214,7 +215,10 @@ def main():
         except Exception as e:
             logger.error(f"Could not parse existing results file {output_filename}, starting fresh. Error: {e}")
 
-    dataset = hf_load.get_quarchds_mcqs(as_hf_ds=True, envfile_path=args.env_file)
+    if args.quarchds_mcqs_dir:
+        dataset = hf_load.get_quarchds_mcqs_local(Path(args.quarchds_mcqs_dir), as_hf_ds=True, envfile_path=args.env_file)
+    else:
+        dataset = hf_load.get_quarchds_mcqs(as_hf_ds=True, envfile_path=args.env_file)
 
     if args.num_questions:
         dataset = dataset.select(range(args.num_questions))

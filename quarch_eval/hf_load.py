@@ -64,6 +64,39 @@ def get_quarchds_frq_dir(
     return quarchds_dir
 
 
+def load_mcqs_from_files(questions_f: Path, answers_f: Path, as_hf_ds: bool) -> datasets.Dataset | list[dict]:
+    with jsonlines.open(questions_f) as reader:
+        questions = list(reader)
+    answers_bytes = llm_infra.decrypt_file(llm_infra.load_fernet(), answers_f)
+    answers = llm_infra.decode_jsonl_from_bytes(answers_bytes)
+    qid2answer = {ans["question_id"]: dict(answer=ans["answer"]) for ans in answers}
+    missing_qids = {q["question_id"] for q in questions} - qid2answer.keys()
+    if len(missing_qids) > 0:
+        logger.error(f"No answer found for question_ids {missing_qids=}")
+        sys.exit(1)
+    qas = [q | qid2answer[q["question_id"]] for q in questions]
+    if not as_hf_ds:
+        return qas
+    dataset = datasets.Dataset.from_list(qas)
+    return dataset
+
+
+def get_quarchds_mcqs_local(
+    quarchds_mcqs_dir: Path,
+    as_hf_ds: bool,
+    envfile_path: Path | None = None,
+) -> datasets.Dataset | list[dict]:
+    if envfile_path is not None:
+        load_dotenv(envfile_path)
+    else:
+        load_dotenv()
+    return load_mcqs_from_files(
+        quarchds_mcqs_dir / "test_questions.jsonl",
+        quarchds_mcqs_dir / "test_answers.jsonl.enc",
+        as_hf_ds,
+    )
+
+
 def get_quarchds_mcqs(
     as_hf_ds: bool,
     quarch_hf_config_override_yml: Path | None = None,
@@ -79,26 +112,13 @@ def get_quarchds_mcqs(
             filename=cfg.mcq_questions,
             token=hf_token,
         )
-        with jsonlines.open(questions_f) as reader:
-            questions = list(reader)
         answers_f = huggingface_hub.hf_hub_download(
             repo_id=cfg.dataset_name,
             repo_type="dataset",
             filename=cfg.mcq_answers,
             token=hf_token,
         )
-        answers_bytes = llm_infra.decrypt_file(llm_infra.load_fernet(), Path(answers_f))
-        answers = llm_infra.decode_jsonl_from_bytes(answers_bytes)
-        qid2answer = {ans["question_id"]: dict(answer=ans["answer"]) for ans in answers}
-        missing_qids = {q["question_id"] for q in questions} - qid2answer.keys()
-        if len(missing_qids) > 0:
-            logger.error(f"No answer found for question_ids {missing_qids=}")
-            sys.exit(1)
-        qas = [q | qid2answer[q["question_id"]] for q in questions]
-        if not as_hf_ds:
-            return qas
-        dataset = datasets.Dataset.from_list(qas)
-        return dataset
+        return load_mcqs_from_files(Path(questions_f), Path(answers_f), as_hf_ds)
     except Exception as e:
         logger.error(f"Failed to load dataset '{cfg.dataset_name}': {e}")
         raise

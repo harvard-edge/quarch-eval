@@ -4,6 +4,7 @@ from typing import Any
 import json
 
 import fire
+import jsonlines
 import pandas as pd
 from loguru import logger
 
@@ -26,19 +27,34 @@ def load_frq_question_data(frq_dir: Path) -> dict:
     return qid2data
 
 
-def load_skill_mapping(env_file: str | None, hf_dataset_override_yml: Path | None) -> dict[str, str]:
+def load_skill_mapping(
+    env_file: str | None,
+    hf_dataset_override_yml: Path | None,
+    quarchds_dir: Path | None = None,
+) -> dict[str, str]:
     envfile_path = Path(env_file) if env_file else None
 
-    frq_dir = hf_load.get_quarchds_frq_dir(
-        envfile_path=envfile_path,
-        quarch_hf_config_override_yml=hf_dataset_override_yml,
-    )
-    frq_qid2data = load_frq_question_data(frq_dir)
-    mcqs = hf_load.get_quarchds_mcqs(
-        as_hf_ds=False,
-        envfile_path=envfile_path,
-        quarch_hf_config_override_yml=hf_dataset_override_yml,
-    )
+    if quarchds_dir is not None:
+        frq_qid2data, mcqs = {}, []
+        if (quarchds_dir / "frqs").is_dir():
+            frq_qid2data = load_frq_question_data(quarchds_dir / "frqs")
+        if (quarchds_dir / "mcqs").is_dir():
+            with jsonlines.open(quarchds_dir / "mcqs" / "test_questions.jsonl") as reader:
+                mcqs = list(reader)
+        if not frq_qid2data and not mcqs:
+            logger.error(f"Neither frqs/ nor mcqs/ found in '{quarchds_dir}', expected the QuArch dataset root")
+            sys.exit(1)
+    else:
+        frq_dir = hf_load.get_quarchds_frq_dir(
+            envfile_path=envfile_path,
+            quarch_hf_config_override_yml=hf_dataset_override_yml,
+        )
+        frq_qid2data = load_frq_question_data(frq_dir)
+        mcqs = hf_load.get_quarchds_mcqs(
+            as_hf_ds=False,
+            envfile_path=envfile_path,
+            quarch_hf_config_override_yml=hf_dataset_override_yml,
+        )
 
     skill_map: dict[str, str] = {}
     for qid, question_data in frq_qid2data.items():
@@ -241,6 +257,7 @@ def run(
     env_file: str | None = None,
     topics_file: str | None = None,
     hf_dataset_config_override: str | None = None,
+    quarchds_dir: str | None = None,
 ):
     """
     Generates an accuracy report for one or more student LLM models.
@@ -256,6 +273,8 @@ def run(
       from which skill labels are derived.
     - topics_file: Optional JSONL file with question topics.
     - hf_dataset_config_override: YAML path to override the default HuggingFace location (ignore, only for internal testing)
+    - quarchds_dir: Optional path to a local QuArch dataset root (e.g., quarchds/) containing frqs/ and/or mcqs/.
+      If set, skill labels are read from it instead of HuggingFace.
     """
     output_path = Path(output_dir)
     if not output_path.exists():
@@ -266,7 +285,11 @@ def run(
         hf_dataset_config_override: Path = Path(hf_dataset_config_override)
         logger.info(f"Using HuggingFace dataset config override from {hf_dataset_config_override}")
     selected_qids = load_qid_subset(qid_subset)
-    skill_map = load_skill_mapping(env_file, hf_dataset_override_yml=hf_dataset_config_override)
+    skill_map = load_skill_mapping(
+        env_file,
+        hf_dataset_override_yml=hf_dataset_config_override,
+        quarchds_dir=Path(quarchds_dir) if quarchds_dir else None,
+    )
     topic_map = load_topic_mapping(topics_file)
     models = discover_models(output_path, llms)
     if not models:

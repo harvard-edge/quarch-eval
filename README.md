@@ -71,11 +71,14 @@ By default, `quarch-eval` relies on `litellm`'s standard environment variable de
 
 If a specific model requires a non-standard API key variable, you can specify it in your custom `llmconfig.yaml` using the `api_key_env_var` field.
 
+Answers to QuArch questions are encrypted to guard against inclusion in LLM training data. `quarch-eval judges`, `quarch-eval mcq`, and `quarch-eval report` decrypt answers in-memory using the `QUARCH_FERNET_SECRET` environment variable.
+
 **Example `.env` file:**
 ```
 OPENAI_API_KEY="sk-..."
 ANTHROPIC_API_KEY="sk-..."
 MY_CUSTOM_API_KEY="some-secret-key"
+QUARCH_FERNET_SECRET="..."
 ```
 
 You would then run a command like this:

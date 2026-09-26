@@ -35,7 +35,7 @@ Job = collections.namedtuple("Command", ["cmd", "exam_name", "llm"])
 
 def run(
     skip_existing: bool = False,
-    quarchds_dir: str | None = None,
+    quarchds_frqs_dir: str | None = None,
     output_dir: str = "output",
     judge_module: str = "quarch_eval.llm_judge_exams",
     judge_llm_name: str = "qwen3-vl-235b-a22b",
@@ -54,7 +54,7 @@ def run(
     
     Args:
         skip_existing: If True, don't re-run when the output file already exists.
-        quarchds_dir: Path to QuArch dataset free response (frqs) subdirectory (e.g., quarchds/frqs),
+        quarchds_frqs_dir: Path to QuArch dataset free response (frqs) subdirectory (e.g., quarchds/frqs),
           containing questions/ and answers/ subdirs. If None, defaults to downloading from HuggingFace
         output_dir: Path to output directory where results are written. Defaults to "output"
         judge_module: Optional module path to llm_judge_exams.py 
@@ -93,18 +93,18 @@ def run(
 
         logger.error(error_msg)
         sys.exit(1)
-    if quarchds_dir is not None:
-        quarchds_dir: Path = Path(quarchds_dir)
+    if quarchds_frqs_dir is not None:
+        quarchds_frqs_dir: Path = Path(quarchds_frqs_dir)
     else:
-        quarchds_dir = hf_load.get_quarchds_frq_dir(envfile_path=Path(env_file) if env_file else None)
+        quarchds_frqs_dir = hf_load.get_quarchds_frq_dir(envfile_path=Path(env_file) if env_file else None)
     output_dir: Path = Path(output_dir)
-    if not quarchds_dir.is_dir():
-        logger.error("QuArch free-response question (frqs) dataset directory '{}' not found.", quarchds_dir)
+    if not quarchds_frqs_dir.is_dir():
+        logger.error("QuArch free-response question (frqs) dataset directory '{}' not found.", quarchds_frqs_dir)
         sys.exit(1)
-    questions_dir = quarchds_dir / "questions"
-    answers_dir = quarchds_dir / "answers"
+    questions_dir = quarchds_frqs_dir / "questions"
+    answers_dir = quarchds_frqs_dir / "answers"
     if not questions_dir.is_dir() or not answers_dir.is_dir():
-        logger.error("questions/ and answers/ subdirectories not found in '{}'.", quarchds_dir)
+        logger.error("questions/ and answers/ subdirectories not found in '{}'.", quarchds_frqs_dir)
         sys.exit(1)
     if not output_dir.is_dir():
         logger.error("Output directory '{}' not found.", output_dir)
@@ -145,10 +145,10 @@ def run(
         allowed_exam_names = {qid.split("/")[0] for qid in qids}
         logger.info("Running only for exams present in {}: {}", qid_subset, allowed_exam_names)
 
-    # grab all {exam_name}.json files in each subdir of quarchds_dir
+    # grab all {exam_name}.json files in each subdir of quarchds_frqs_dir
     exam_files = list(sorted(questions_dir.glob("**/*.json")))
     if not exam_files:
-        logger.warning("No exam files found in '{}'.", quarchds_dir)
+        logger.warning("No exam files found in '{}'.", quarchds_frqs_dir)
         sys.exit(1)
     # sanity check that each question json has a corresponding encrypted answers file (ending in json.enc)
     for exam_path in exam_files:
@@ -194,7 +194,7 @@ def run(
                 "--exam_name",
                 exam_name,
                 "--quarch_frqs_dir",
-                str(quarchds_dir),
+                str(quarchds_frqs_dir),
                 "--output_dir",
                 str(output_dir),
                 "--student_llm_name",

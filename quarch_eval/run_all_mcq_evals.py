@@ -40,6 +40,8 @@ def run(
     python_executable: str = sys.executable,
     llm_config: str | None = None,
     env_file: str | None = None,
+    quarchds_mcqs_dir: str | None = None,
+    num_questions: int | None = None,
 ):
     """Run evaluations on multiple-choice questions.
     
@@ -53,6 +55,9 @@ def run(
         python_executable: Python interpreter to use for subprocesses.
         llm_config: Path to a custom LLM configuration YAML file.
         env_file: Path to a .env file to load environment variables from.
+        quarchds_mcqs_dir: Path to QuArch dataset multiple choice (mcqs) subdirectory (e.g., quarchds/mcqs),
+          containing test_questions.jsonl and test_answers.jsonl.enc. If None, defaults to downloading from HuggingFace
+        num_questions: Optional, only evaluate the first N questions (for testing).
     """
     if env_file:
         load_dotenv(env_file)
@@ -86,6 +91,10 @@ def run(
             cmd += ["--env_file", env_file]
         if llm_config:
             cmd += ["--llm_config", llm_config]
+        if quarchds_mcqs_dir:
+            cmd += ["--quarchds_mcqs_dir", str(quarchds_mcqs_dir)]
+        if num_questions:
+            cmd += ["--num_questions", str(num_questions)]
         jobs.append(Job(cmd=cmd, llm=llm))
 
     if not jobs:
