@@ -269,7 +269,7 @@ def process_question(
                 judge_instruction_template=LLM_JUDGE_PROMPT,
                 judge_response=judge_text,
                 judge_reasoning_trace=None,
-                judge_generation_config=judge_llm_config.get("generation_config"),
+                judge_generation_config=judge_llm_config.generation_kwargs.to_dict() or None,
                 judgment=extract_judgment(judge_text),
             )
             new_judgments_for_response.append(judgment)

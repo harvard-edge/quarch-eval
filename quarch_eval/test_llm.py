@@ -6,12 +6,13 @@ import requests
 from dotenv import load_dotenv
 from loguru import logger
 from ml_collections.config_dict import ConfigDict
+import litellm
 
 from . import llmconfig
 from . import llm_infra
 
 def invoke_multimodal(llm_name: str, config: ConfigDict) -> None:
-    url = "https://apod.nasa.gov/apod/image/2309/TheLargeMagellanicCloud1024.jpg"
+    url = "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/july/LMC.jpg"
 
     with tempfile.TemporaryDirectory() as tmpdir:
         imgpth = Path(tmpdir) / "test.jpg"
@@ -42,6 +43,7 @@ def run(
     llm_config: str | None = None,
     env_file: str | None = None,
     test_multimodal: bool = False,
+    litellm_debug: bool = False,
 ):
     """
     Run a smoke test for a specified LLM.
@@ -55,6 +57,9 @@ def run(
     """
     if env_file:
         load_dotenv(env_file)
+
+    if litellm_debug:
+        litellm._turn_on_debug()
 
     llm_configs = llmconfig.load_llm_config(Path(llm_config) if llm_config else None)
 

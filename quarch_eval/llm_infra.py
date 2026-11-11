@@ -91,27 +91,33 @@ def get_image_bytes(image_path: Path, max_dim: Optional[int] = None) -> Optional
 
 # --- Message Creation ---
 
-def create_converse_messages(text: str, image_paths: list[Path], llm_config: dict) -> Optional[list[dict]]:
+def create_converse_messages(text: str, image_paths: list[Path], llm_config: ConfigDict) -> list[dict] | None:
     if llm_config.generation_kwargs.get("use_harmony_adapter", False):
         assert len(image_paths) == 0, "images not supported with harmony adapter"
         return [dict(role="user", content=harmony_adapter.gpt_oss_high_reasoning(text))]
-    content = [{"type": "text", "text": text}]
+
+    content: list[dict]
+    if llm_config.use_responses_api:
+        content = [{"type": "input_text", "text": text}]
+    else:
+        content = [{"type": "text", "text": text}]
+
     max_dim = llm_config.get("image_max_dim")
-    
     for img_path in image_paths:
         img_bytes = get_image_bytes(img_path, max_dim=max_dim)
-        if img_bytes:
-            base64_image = base64.b64encode(img_bytes).decode("utf-8")
-            content.append(
-                {
-                    "type": "image_url",
-                    "image_url": {
-                        "url": f"data:image/png;base64,{base64_image}"
-                    },
-                }
-            )
-        else:
+        if not img_bytes:
             logger.warning(f"Could not process image, skipping: {img_path}")
+            continue
+
+        base64_image = base64.b64encode(img_bytes).decode("utf-8")
+        data_url = f"data:image/png;base64,{base64_image}"
+
+        if llm_config.use_responses_api:
+            image_part = {"type": "input_image", "image_url": data_url}
+        else:
+            image_part = {"type": "image_url", "image_url": {"url": data_url}}
+
+        content.append(image_part)
 
     return [{"role": "user", "content": content}]
 
