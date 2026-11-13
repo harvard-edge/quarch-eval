@@ -197,15 +197,17 @@ def process_question(
                     logger.opt(exception=True).error(f"Student answer {i=} failed for {question_id=}")
 
         for ans, resp_rawstr in zip(new_student_answers, new_api_responses_rawstr):
-            if ans:
-                qr = dt.Response(
-                    student_response=ans,
-                    student_apiresponse_raw=resp_rawstr,
-                    student_reasoning_trace=maybe_extract_reasoining_trace(resp_rawstr),
-                    judgments=None,
-                    metrics=None
-                )
-                existing_question_responses.responses.append(qr)
+            if not ans:
+                logger.warning(f"Empty student answer returned for {question_id=}\n    {resp_rawstr=}")
+                continue
+            qr = dt.Response(
+                student_response=ans,
+                student_apiresponse_raw=resp_rawstr,
+                student_reasoning_trace=maybe_extract_reasoining_trace(resp_rawstr),
+                judgments=None,
+                metrics=None
+            )
+            existing_question_responses.responses.append(qr)
 
     # --- Get Judge Verdicts ---
     def _judge_closure(response: dt.Response, response_idx: int) -> list[dt.Judgment]:
